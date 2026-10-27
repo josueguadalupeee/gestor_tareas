@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: tareasdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tareasdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    image: gestor-tareas:latest
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: tareasdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DEBUG: "1"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
