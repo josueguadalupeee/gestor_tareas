@@ -51,3 +51,34 @@ jobs:
 
       - name: Ejecutar pruebas
         run: python manage.py test --verbosity 2
+
+  build:
+    name: Build de imagen Docker
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Construir imagen Docker
+        run: |
+          docker build -t gestor-tareas:latest -t gestor-tareas:${{ github.sha }} .
+          docker images gestor-tareas
+
+      - name: Exportar imagen como archivo
+        run: docker save gestor-tareas:latest | gzip > gestor-tareas-image.tar.gz
+
+      - name: Guardar artefacto en GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: gestor-tareas-image
+          path: gestor-tareas-image.tar.gz
+          retention-days: 7
+
+      - name: Preparar publicación en DockerHub (simulado)
+        run: |
+          echo "Comandos que se ejecutarían para publicar en DockerHub:"
+          echo "docker login -u USUARIO_DOCKERHUB"
+          echo "docker tag gestor-tareas:latest USUARIO_DOCKERHUB/gestor-tareas:${{ github.sha }}"
+          echo "docker push USUARIO_DOCKERHUB/gestor-tareas:${{ github.sha }}"
